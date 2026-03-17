@@ -1,70 +1,70 @@
 # Design Intelligence Platform
 
-AEC 설계 워크플로우를 위한 Grasshopper ↔ Supabase 연동 플랫폼.
-GH 스크립트 버전 관리 + 설계 파라미터/메트릭 저장 + 최적화 대시보드.
+An AEC design workflow platform connecting Grasshopper to Supabase.
+Script version control + design parameter/metric storage + optimization dashboard.
 
 ## Features
 
-- **Grasshopper 스크립트 업로드/버전 관리** — GH definition을 Script Store에 저장, 버전 이력 추적
-- **설계 옵션 파라미터 & 메트릭 저장** — Supabase PostgreSQL 기반 설계 데이터 영속화
-- **Nelder-Mead 최적화 내장** — 설계 파라미터 자동 최적화
-- **Wallacei 결과 임포트** — Wallacei 진화 최적화 결과 연동
-- **Revit RIR 데이터 추출** — Revit Inside Rhino (RIR)을 통한 Revit 데이터 수집
-- **Next.js 웹 대시보드** — 스크립트 목록, 설계 메트릭 시각화, 최적화 결과 비교
+- **Grasshopper Script Upload & Version Control** — Save GH definitions to a Script Store with full version history
+- **Design Option Parameters & Metrics Storage** — Persist design data via Supabase PostgreSQL
+- **Built-in Nelder-Mead Optimization** — Automatically optimize design parameters
+- **Wallacei Results Import** — Connect evolutionary optimization results from Wallacei
+- **Revit RIR Data Extraction** — Collect Revit data through Revit Inside Rhino (RIR)
+- **Next.js Web Dashboard** — Browse scripts, visualize design metrics, compare optimization results
 
 ## Project Structure
 
 ```
 gh_supabase/
-├── ghpython_script_upload.py      # GH Python: 스크립트 업로드
-├── ghpython_version_upload.py     # GH Python: 버전 업로드
-├── ghpython_design_upload.py      # GH Python: 설계 파라미터/메트릭 업로드
-├── config.example.py              # Supabase 설정 템플릿 (config.py로 복사 후 사용)
-├── dashboard/                     # Next.js 웹 대시보드
-│   ├── .env.local.example         # 환경변수 템플릿
+├── ghpython_script_upload.py      # GH Python: upload script to store
+├── ghpython_version_upload.py     # GH Python: upload new version
+├── ghpython_design_upload.py      # GH Python: upload design parameters & metrics
+├── config.example.py              # Supabase config template (copy to config.py)
+├── dashboard/                     # Next.js web dashboard
+│   ├── .env.local.example         # Environment variable template
 │   ├── app/                       # Next.js App Router
-│   └── public/rhino3dm/           # rhino3dm.js 라이브러리 (open-source)
-└── supabase/                      # DB 마이그레이션 스키마
+│   └── public/rhino3dm/           # rhino3dm.js library (open-source)
+└── supabase/                      # DB migration schemas
 ```
 
 ## Setup
 
-### 1. Supabase 프로젝트 생성
+### 1. Create a Supabase Project
 
-[supabase.com](https://supabase.com)에서 새 프로젝트를 생성하고 Project URL과 anon key를 복사합니다.
+Go to [supabase.com](https://supabase.com), create a new project, and copy your Project URL and anon key.
 
-### 2. GH Python 설정
+### 2. Configure GH Python Scripts
 
 ```bash
 cp config.example.py config.py
 ```
 
-`config.py`를 열고 Supabase 키를 입력합니다:
+Open `config.py` and fill in your Supabase credentials:
 
 ```python
 SUPABASE_URL = "https://your-project.supabase.co"
 SUPABASE_KEY = "your-anon-key"
 ```
 
-### 3. 대시보드 설정
+### 3. Set Up the Dashboard
 
 ```bash
 cd dashboard
 cp .env.local.example .env.local
 ```
 
-`.env.local`을 열고 키를 입력한 후:
+Open `.env.local`, fill in your keys, then run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`으로 접속합니다.
+Open your browser at `http://localhost:3000`.
 
-### 4. 환경변수 (선택)
+### 4. Environment Variables (Optional)
 
-대시보드 URL을 변경하려면 `DASHBOARD_URL` 환경변수를 설정합니다:
+To change the dashboard URL, set the `DASHBOARD_URL` environment variable:
 
 ```bash
 # Windows
@@ -76,21 +76,21 @@ export DASHBOARD_URL=http://your-server:3000
 
 ## Usage
 
-### Grasshopper에서 스크립트 업로드
+### Upload a Script from Grasshopper
 
-1. Grasshopper에서 `ghpython_script_upload.py`를 GH Python 컴포넌트에 붙여넣습니다.
-2. `config.py` 경로를 GH Python 경로에 추가합니다.
-3. `upload` 입력을 `True`로 설정하면 현재 GH definition이 Script Store에 업로드됩니다.
+1. Paste `ghpython_script_upload.py` into a GH Python component.
+2. Add the `config.py` directory to the GH Python search paths.
+3. Set the `upload` input to `True` — the current GH definition will be uploaded to the Script Store.
 
-### 설계 파라미터 저장
+### Save Design Parameters
 
-`ghpython_design_upload.py`를 사용하여 GH 파라미터와 메트릭을 Supabase에 저장합니다. 대시보드에서 결과를 비교하고 최적 옵션을 탐색합니다.
+Use `ghpython_design_upload.py` to save GH parameters and metrics to Supabase. Compare results and explore optimal options from the dashboard.
 
 ## Database Schema
 
-`supabase/` 폴더의 마이그레이션 파일을 Supabase SQL Editor에서 실행합니다.
+Run the migration files in the `supabase/` folder using the Supabase SQL Editor.
 
 ## License
 
-[AGPL-3.0](LICENSE) — 이 소프트웨어를 SaaS 형태로 제공할 경우 소스 코드 공개 의무가 있습니다.
-상업적 이용을 위한 별도 라이선스 문의는 이슈로 남겨주세요.
+[AGPL-3.0](LICENSE) — If you use this software to provide a SaaS service, you are required to release your source code.
+For commercial licensing inquiries, please open an issue.
