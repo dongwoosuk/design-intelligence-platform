@@ -1,0 +1,17 @@
+# Supabase credentials — copy config.example.py → config.py and fill in
+config.py
+
+# Environment files
+*.env
+.env
+.env.local
+.env.*.local
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node / Next.js — covered by dashboard/.gitignore but listed here for clarity
+node_modules/
