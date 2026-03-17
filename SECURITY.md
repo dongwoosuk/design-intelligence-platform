@@ -1,130 +1,123 @@
 # GH Supabase Security Guide
 
-## 🔐 보안 설정 가이드
+## Table of Contents
 
-이 문서는 gh_supabase 프로젝트를 안전하게 설정하고 운영하기 위한 가이드입니다.
-
----
-
-## 📋 목차
-
-1. [초기 설정](#초기-설정)
-2. [환경 변수 관리](#환경-변수-관리)
-3. [Supabase 보안 설정](#supabase-보안-설정)
+1. [Initial Setup](#initial-setup)
+2. [Environment Variable Management](#environment-variable-management)
+3. [Supabase Security Configuration](#supabase-security-configuration)
 4. [Row Level Security (RLS)](#row-level-security-rls)
-5. [API 보안](#api-보안)
-6. [배포 시 체크리스트](#배포-시-체크리스트)
+5. [API Security](#api-security)
+6. [Deployment Checklist](#deployment-checklist)
 
 ---
 
-## 초기 설정
+## Initial Setup
 
-### 1. Dashboard (Next.js) 환경 변수 설정
+### 1. Dashboard (Next.js) Environment Variables
 
 ```bash
 cd dashboard
 cp .env.local.example .env.local
 ```
 
-**`.env.local` 파일 편집:**
+**Edit `.env.local`:**
 ```bash
-# Supabase 대시보드에서 복사: Settings → API
+# Copy from Supabase Dashboard: Settings → API
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-actual-anon-key
 
-# 선택사항: AI 설명 생성
-GEMINI_API_KEY=your-gemini-key  # 또는 비워두기
+# Optional: AI description generation
+GEMINI_API_KEY=your-gemini-key  # or leave empty
 ```
 
-**⚠️ 중요:**
-- `.env.local`은 **절대 Git에 커밋하지 마세요**
-- `.gitignore`에 포함되어 있는지 확인
+**⚠️ Important:**
+- **Never commit `.env.local` to Git**
+- Verify it is listed in `.gitignore`
 
-### 2. Python Scripts 설정 (Grasshopper)
+### 2. Python Script Configuration (Grasshopper)
 
 ```bash
-cd src/gh/gh_supabase
 cp config.example.py config.py
 ```
 
-**`config.py` 파일 편집:**
+**Edit `config.py`:**
 ```python
 SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
 SUPABASE_KEY = "your-actual-anon-key"
 STORAGE_BUCKET = "design-assets"
 ```
 
-**⚠️ 중요:**
-- `config.py`는 **절대 Git에 커밋하지 마세요**
-- `.gitignore`에 포함되어 있는지 확인
+**⚠️ Important:**
+- **Never commit `config.py` to Git**
+- Verify it is listed in `.gitignore`
 
 ---
 
-## 환경 변수 관리
+## Environment Variable Management
 
-### 로컬 개발
+### Local Development
 
-**파일 구조:**
+**File structure:**
 ```
 dashboard/
-├── .env.local.example    # ✅ Git에 커밋 (템플릿)
-├── .env.local            # ❌ Git에 커밋 안함 (실제 키)
-└── .gitignore            # .env.local 포함 확인
+├── .env.local.example    # ✅ Commit to Git (template)
+├── .env.local            # ❌ Do NOT commit (real keys)
+└── .gitignore            # Confirm .env.local is listed
 
-src/gh/gh_supabase/
-├── config.example.py     # ✅ Git에 커밋 (템플릿)
-├── config.py             # ❌ Git에 커밋 안함 (실제 키)
-└── .gitignore            # config.py 포함 확인
+gh_supabase/
+├── config.example.py     # ✅ Commit to Git (template)
+├── config.py             # ❌ Do NOT commit (real keys)
+└── .gitignore            # Confirm config.py is listed
 ```
 
-### 프로덕션 배포 (Vercel)
+### Production Deployment (Vercel)
 
 1. **Vercel Dashboard → Settings → Environment Variables**
-2. 다음 변수 추가:
+2. Add the following variables:
    ```
    NEXT_PUBLIC_SUPABASE_URL
    NEXT_PUBLIC_SUPABASE_ANON_KEY
-   GEMINI_API_KEY (선택)
+   GEMINI_API_KEY (optional)
    ```
-3. 환경별 설정:
-   - Production: 프로덕션 Supabase 프로젝트
-   - Preview: 스테이징 Supabase 프로젝트
-   - Development: 로컬 Supabase (선택)
+3. Per-environment configuration:
+   - Production: production Supabase project
+   - Preview: staging Supabase project
+   - Development: local Supabase (optional)
 
 ---
 
-## Supabase 보안 설정
+## Supabase Security Configuration
 
-### 1. API 키 종류
+### 1. API Key Types
 
-Supabase는 두 가지 키를 제공합니다:
+Supabase provides two types of keys:
 
-#### ✅ Anon/Public Key (안전)
-- 클라이언트 코드에 사용 가능
-- Row Level Security (RLS)로 보호됨
-- 공개되어도 RLS 정책이 있으면 안전
+#### ✅ Anon/Public Key (Safe)
+- Safe to use in client-side code
+- Protected by Row Level Security (RLS)
+- Secure as long as RLS policies are in place
 
-#### ⚠️ Service Role Key (위험)
-- **절대 클라이언트 코드에 노출 금지**
-- 서버 전용 (백엔드 API, 관리자 작업)
-- 모든 RLS를 우회함
+#### ⚠️ Service Role Key (Dangerous)
+- **Never expose in client-side code**
+- Server-side only (backend APIs, admin tasks)
+- Bypasses all RLS policies
 
-### 2. Storage Bucket 설정
+### 2. Storage Bucket Configuration
 
 **Supabase Dashboard → Storage → Buckets**
 
-1. **`design-assets` 버킷 생성:**
-   - Public: ✅ (이미지, 스크린샷, 지오메트리)
+1. **Create `design-assets` bucket:**
+   - Public: ✅ (images, screenshots, geometry)
    - File size limit: 50MB
 
-2. **Bucket Policies 설정:**
+2. **Set Bucket Policies:**
    ```sql
-   -- 읽기: 모두 허용
+   -- Read: allow all
    CREATE POLICY "Public read access"
    ON storage.objects FOR SELECT
    USING (bucket_id = 'design-assets');
 
-   -- 업로드: 인증된 사용자만 (RLS 활성화 후)
+   -- Upload: authenticated users only (after enabling RLS)
    CREATE POLICY "Authenticated users can upload"
    ON storage.objects FOR INSERT
    WITH CHECK (
@@ -137,13 +130,13 @@ Supabase는 두 가지 키를 제공합니다:
 
 ## Row Level Security (RLS)
 
-현재 프로젝트는 **RLS가 비활성화**되어 있습니다. 프로덕션 배포 전에 반드시 활성화하세요.
+RLS is currently **disabled**. Enable it before deploying to production.
 
-### 1. RLS 활성화
+### 1. Enable RLS
 
 **Supabase Dashboard → Database → Tables → [Table] → RLS**
 
-각 테이블에서 "Enable RLS" 클릭:
+Click "Enable RLS" for each table:
 - `scripts`
 - `script_versions`
 - `script_screenshots`
@@ -157,34 +150,34 @@ Supabase는 두 가지 키를 제공합니다:
 - `project_programs`
 - `project_media`
 
-### 2. 기본 RLS 정책 예시
+### 2. Example RLS Policies
 
-#### Scripts (읽기: 모두, 쓰기: 인증 사용자)
+#### Scripts (read: public, write: authenticated)
 ```sql
--- 읽기: 모두 허용
+-- Read: allow all
 CREATE POLICY "Public read access"
 ON scripts FOR SELECT
 USING (true);
 
--- 생성: 인증된 사용자만
+-- Insert: authenticated users only
 CREATE POLICY "Authenticated users can insert"
 ON scripts FOR INSERT
 WITH CHECK (auth.role() = 'authenticated');
 
--- 수정: 본인이 작성한 것만
+-- Update: own scripts only
 CREATE POLICY "Users can update own scripts"
 ON scripts FOR UPDATE
 USING (auth.uid() = user_id);
 
--- 삭제: 본인이 작성한 것만
+-- Delete: own scripts only
 CREATE POLICY "Users can delete own scripts"
 ON scripts FOR DELETE
 USING (auth.uid() = user_id);
 ```
 
-#### Design Runs (프로젝트별 접근 제어)
+#### Design Runs (project-based access control)
 ```sql
--- 읽기: 프로젝트 멤버만
+-- Read: project members only
 CREATE POLICY "Project members can read"
 ON design_runs FOR SELECT
 USING (
@@ -198,7 +191,7 @@ USING (
   )
 );
 
--- 생성: 프로젝트 멤버만
+-- Insert: project owners only
 CREATE POLICY "Project members can insert"
 ON design_runs FOR INSERT
 WITH CHECK (
@@ -209,34 +202,34 @@ WITH CHECK (
 );
 ```
 
-### 3. 단계별 RLS 적용
+### 3. Phased RLS Rollout
 
-**Phase 1: 읽기 전용 (즉시 적용)**
+**Phase 1: Read-only (apply immediately)**
 ```sql
--- 모든 테이블: 읽기는 허용, 쓰기는 차단
+-- All tables: allow reads, block writes
 CREATE POLICY "Read only" ON [table_name] FOR SELECT USING (true);
 ```
 
-**Phase 2: 인증 추가 (1-2주 후)**
+**Phase 2: Add authentication (within 1–2 weeks)**
 ```sql
--- 인증된 사용자만 쓰기 허용
+-- Allow writes for authenticated users only
 CREATE POLICY "Authenticated write" ON [table_name]
 FOR ALL USING (auth.role() = 'authenticated');
 ```
 
-**Phase 3: 세밀한 권한 (1-2개월 후)**
-- 사용자별, 프로젝트별, 역할별 권한 설정
-- Admin, Editor, Viewer 역할 구분
+**Phase 3: Fine-grained permissions (within 1–2 months)**
+- Per-user, per-project, and per-role access
+- Admin / Editor / Viewer role separation
 
 ---
 
-## API 보안
+## API Security
 
-### 1. Rate Limiting (속도 제한)
+### 1. Rate Limiting
 
-**Next.js Middleware 추가:**
+**Add Next.js Middleware:**
 
-**`middleware.ts` 생성:**
+Create `middleware.ts`:
 ```typescript
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -247,14 +240,12 @@ export function middleware(request: NextRequest) {
   const ip = request.ip ?? '127.0.0.1'
   const now = Date.now()
 
-  // IP별 요청 제한 확인
   const limit = rateLimitMap.get(ip)
 
   if (limit) {
-    // 제한 시간 초과 시 리셋
     if (now > limit.resetTime) {
-      rateLimitMap.set(ip, { count: 1, resetTime: now + 60000 }) // 1분
-    } else if (limit.count > 100) { // 분당 100 요청
+      rateLimitMap.set(ip, { count: 1, resetTime: now + 60000 })
+    } else if (limit.count > 100) { // 100 requests per minute
       return new NextResponse('Too Many Requests', { status: 429 })
     } else {
       limit.count++
@@ -271,9 +262,9 @@ export const config = {
 }
 ```
 
-### 2. Input Validation (입력 검증)
+### 2. Input Validation
 
-**파일 업로드 검증:**
+**File upload validation:**
 ```typescript
 // app/api/scripts/upload/route.ts
 const ALLOWED_EXTENSIONS = ['.gh', '.ghx']
@@ -283,7 +274,6 @@ export async function POST(request: Request) {
   const formData = await request.formData()
   const file = formData.get('file') as File
 
-  // 파일 확장자 검증
   const ext = file.name.substring(file.name.lastIndexOf('.'))
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return NextResponse.json(
@@ -292,7 +282,6 @@ export async function POST(request: Request) {
     )
   }
 
-  // 파일 크기 검증
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json(
       { error: 'File too large' },
@@ -300,13 +289,13 @@ export async function POST(request: Request) {
     )
   }
 
-  // 업로드 진행...
+  // proceed with upload...
 }
 ```
 
-### 3. CORS 설정
+### 3. CORS Configuration
 
-**프로덕션 도메인만 허용:**
+**Allow production domain only:**
 ```typescript
 // next.config.js
 module.exports = {
@@ -315,7 +304,7 @@ module.exports = {
       {
         source: '/api/:path*',
         headers: [
-          { key: 'Access-Control-Allow-Origin', value: 'https://ids.steinberghart.com' },
+          { key: 'Access-Control-Allow-Origin', value: 'https://your-domain.com' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE' },
         ],
       },
@@ -326,44 +315,44 @@ module.exports = {
 
 ---
 
-## 배포 시 체크리스트
+## Deployment Checklist
 
-### 🔴 필수 (배포 전)
+### 🔴 Required (before deploying)
 
-- [ ] `.env.local`에 실제 키 입력 (로컬)
-- [ ] `config.py`에 실제 키 입력 (Grasshopper)
-- [ ] `.gitignore`에 민감 파일 포함 확인
-- [ ] Git history에 키 노출 확인 (`git log -p | grep -i "supabase"`)
-- [ ] Vercel 환경 변수 설정
+- [ ] Fill in real keys in `.env.local` (local)
+- [ ] Fill in real keys in `config.py` (Grasshopper)
+- [ ] Confirm sensitive files are listed in `.gitignore`
+- [ ] Verify no keys are exposed in Git history (`git log -p | grep -i "supabase"`)
+- [ ] Set Vercel environment variables
 
-### 🟡 권장 (1주 내)
+### 🟡 Recommended (within 1 week)
 
-- [ ] Row Level Security (RLS) 활성화
-- [ ] Storage Bucket 정책 설정
-- [ ] API Rate Limiting 추가
-- [ ] Input Validation 추가
-- [ ] HTTPS 강제 (Vercel은 기본 활성화)
+- [ ] Enable Row Level Security (RLS)
+- [ ] Configure Storage Bucket policies
+- [ ] Add API rate limiting
+- [ ] Add input validation
+- [ ] Enforce HTTPS (enabled by default on Vercel)
 
-### 🟢 선택 (1개월 내)
+### 🟢 Optional (within 1 month)
 
-- [ ] Supabase Auth 통합 (이메일/OAuth)
-- [ ] 사용자 역할 시스템 (Admin/Editor/Viewer)
-- [ ] 감사 로그 (audit log)
-- [ ] Content Security Policy (CSP)
-- [ ] Subresource Integrity (SRI)
+- [ ] Integrate Supabase Auth (email / OAuth)
+- [ ] Implement user role system (Admin / Editor / Viewer)
+- [ ] Add audit logging
+- [ ] Set up Content Security Policy (CSP)
+- [ ] Add Subresource Integrity (SRI)
 
 ---
 
-## 보안 사고 대응
+## Security Incident Response
 
-### 키 노출 시 조치
+### If Keys Are Exposed
 
-**1. 즉시 키 회전:**
+**1. Rotate keys immediately:**
 - Supabase Dashboard → Settings → API → Reset Keys
 
-**2. Git history 정리 (키가 커밋된 경우):**
+**2. Clean Git history (if keys were committed):**
 ```bash
-# BFG Repo-Cleaner 사용
+# Using BFG Repo-Cleaner
 git clone --mirror git://example.com/repo.git
 bfg --replace-text passwords.txt repo.git
 cd repo.git
@@ -372,28 +361,27 @@ git gc --prune=now --aggressive
 git push
 ```
 
-**3. 영향 범위 확인:**
+**3. Assess impact:**
 - Supabase Dashboard → Logs → API Logs
-- 의심스러운 요청 확인
+- Review for suspicious requests
 
-**4. RLS 즉시 활성화:**
-- 읽기 전용 정책 우선 적용
-- 서비스 중단 최소화
+**4. Enable RLS immediately:**
+- Apply read-only policy first to minimize downtime
 
-### 의심스러운 활동 감지
+### Detecting Suspicious Activity
 
-- 비정상적인 트래픽 증가
-- 알 수 없는 IP에서의 대량 요청
-- Storage 사용량 급증
+- Unusual traffic spikes
+- Large volumes of requests from unknown IPs
+- Sudden increase in Storage usage
 
-**대응:**
-1. Rate Limiting 강화
-2. IP 차단 (Vercel Firewall)
-3. 일시적 API 비활성화 (긴급)
+**Response:**
+1. Tighten rate limiting
+2. Block IPs (Vercel Firewall)
+3. Temporarily disable the API (emergency)
 
 ---
 
-## 추가 리소스
+## Additional Resources
 
 - [Supabase Security Best Practices](https://supabase.com/docs/guides/security)
 - [Next.js Security Headers](https://nextjs.org/docs/advanced-features/security-headers)
@@ -401,11 +389,11 @@ git push
 
 ---
 
-## 문의
+## Contact
 
-보안 관련 문제 발견 시:
-- Email: [your-security-email]
-- GitHub Issues: [링크]
+If you discover a security issue:
+- GitHub Issues (for non-sensitive reports)
+- For sensitive vulnerabilities, please disclose privately before opening a public issue.
 
-**🔒 책임있는 공개 (Responsible Disclosure)**
-보안 취약점을 발견하셨다면, 공개 이슈 대신 비공개로 먼저 알려주세요.
+**🔒 Responsible Disclosure**
+If you find a security vulnerability, please contact us privately before making it public.
